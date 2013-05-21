@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Text;
 using NDesk.Options;
 using Tfs2Gource.Extensions;
 
@@ -15,31 +16,38 @@ namespace Tfs2Gource
             var gourceOptions = new Configuration.GourceOptions();
 
             var options = new OptionSet {
-                { "t|tfs=", "The TFS URL like scheme://url:port/teamCollection.", v => gourceOptions.TfsUrl = v },
-                { "u|username=", "Username to TFS.", v => gourceOptions.Username = v },
-                { "p|password=", "Password to TFS.", v => gourceOptions.UserPassword = v.GetBytes() },
-                { "do|domain=", "Domain of user.", v => gourceOptions.UserDomain = v },
-                { "r|projectpath=", @"The TFS project path like $\teamProject\project.", v => gourceOptions.ProjectPath = v },
-                { "m|minutes=", "How many minutes worth of changesets to fetch.", (int v) => gourceOptions.TimeSpan = TimeSpan.FromMinutes(v) },
-                { "d|days=", "How many days worth of changesets to fetch (overrides).", (int v) => gourceOptions.TimeSpan = TimeSpan.FromDays(v) },
-                { "o|output=", "Path to output.", v => gourceOptions.OutputPath = v },
-                { "h|help",  "show this message and exit", v => showHelp = v != null },
+                { "t|tfs=", "The URL to access TFS. Example: scheme://domain:port/tfs/collection. (Required)", v => gourceOptions.TfsUrl = v },
+                { "u|username=", "The TFS Username to connect to TFS.", v => gourceOptions.Username = v },
+                { "p|password=", "The TFS Password to connect to TFS.", v => gourceOptions.UserPassword = v.GetBytes() },
+                { "do|domain=", "The username's domain to connect to TFS.", v => gourceOptions.UserDomain = v },
+                { "r|projectpath=", @"The TFS source location (as displayed in Visual Studio 'Source Control Explorer'). Example: $/teamProject/project/dev. Supports ';' seperated projects. Example: $/teamProject/projectA/dev;$/teamProject/projectB/dev. (Required)", v => gourceOptions.ProjectPath = v },
+                { "m|minutes=", "Before now, how many minutes ago of changesets to return.", (int v) => gourceOptions.TimeSpan = TimeSpan.FromMinutes(v) },
+                { "d|days=", "Before now, how many days ago of changesets to return. Default: 7 (overrides minutes).", (int v) => gourceOptions.TimeSpan = TimeSpan.FromDays(v) },
+                { "o|output=", "The filename or filepath to save the log file to. Default: gource.log.", v => gourceOptions.OutputPath = v },
+                { "h|help",  "Show this message and exit.", v => showHelp = v != null },
             };
             options.Parse(args);
 
-            if (showHelp || !gourceOptions.TfsUrl.HasValue() || !gourceOptions.ProjectPath.HasValue())
-                ShowHelp();
+            if (gourceOptions.TimeSpan.TotalMinutes == 0)
+                gourceOptions.TimeSpan = TimeSpan.FromDays(7);
+
+            if (!gourceOptions.OutputPath.HasValue())
+                gourceOptions.OutputPath = "gource.log";
+
+            if (showHelp || !gourceOptions.TfsUrl.HasValue() || !gourceOptions.ProjectPath.HasValue()) {
+                Console.WriteLine();
+                Console.WriteLine(" Tfs2Gource help:");
+                Console.WriteLine();
+                options.WriteOptionDescriptions(Console.Out);
+                return;
+            }
 
 			FileInfo logFile;
 			bool success = GenerateLogFile(gourceOptions, out logFile);
             if (success) {
-                Console.WriteLine("Gource log file written");
+                Console.WriteLine("Wrote out Gource log file to {0}", logFile.FullName);    
             }
 		}
-
-        private static void ShowHelp() {
-            Console.WriteLine("Help here");
-        }
 
 		private static bool GenerateLogFile(Configuration.GourceOptions gourceOptions, out FileInfo logFile)
 		{

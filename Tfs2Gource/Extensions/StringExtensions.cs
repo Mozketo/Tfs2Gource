@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Text.RegularExpressions;
 
 namespace Tfs2Gource.Extensions
@@ -19,7 +20,7 @@ namespace Tfs2Gource.Extensions
         }
 
         public static bool HasValue(this string s) {
-            return string.IsNullOrEmpty(s);
+            return !String.IsNullOrEmpty(s);
         }
     }
 }
