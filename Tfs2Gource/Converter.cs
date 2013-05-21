@@ -39,7 +39,7 @@ namespace Tfs2Gource {
 			{
                 var source = server.GetService<VersionControlServer>();
                 var projectPathTemp = path.Trim();
-				Console.WriteLine("Searching history for project {0}", projectPathTemp);
+                Trace.WriteLine(String.Format("Searching history for project {0}", projectPathTemp));
 
 				var projectHistory = source.QueryHistory(projectPathTemp, VersionSpec.Latest, 0, RecursionType.Full,
 														  null, new DateVersionSpec(from), null, int.MaxValue,
@@ -53,7 +53,7 @@ namespace Tfs2Gource {
             // Using the list of changesets transform the output to match what Gource requires.
 			using (var writer = new StreamWriter(outStream))
 			{
-				foreach (var item in orderedHistory) // history.ForEach(item =>
+				foreach (var item in orderedHistory)
 				{
 					Trace.WriteLine(String.Format("Found changeset id = {0}. Committed: {1}", item.ChangesetId, item.CreationDate));
 

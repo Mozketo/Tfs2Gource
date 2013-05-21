@@ -28,19 +28,27 @@ namespace Tfs2Gource
             };
             options.Parse(args);
 
+            if (showHelp) {
+                ShowHelp(options);
+                return;
+            }
+
+            if (!gourceOptions.TfsUrl.HasValue()) {
+                ShowHelp(options, "-t or -tfs= is a required field, please supply the URL to connect to TFS.");
+                return;
+            }
+            
+            if (!gourceOptions.ProjectPath.HasValue()) {
+                ShowHelp(options, "-r or -projectpath= is a required field, please supply the TFS source path.");
+                return;
+            }
+
+            // Configure some defaults is none are supplied.
             if (gourceOptions.TimeSpan.TotalMinutes == 0)
                 gourceOptions.TimeSpan = TimeSpan.FromDays(7);
 
             if (!gourceOptions.OutputPath.HasValue())
                 gourceOptions.OutputPath = "gource.log";
-
-            if (showHelp || !gourceOptions.TfsUrl.HasValue() || !gourceOptions.ProjectPath.HasValue()) {
-                Console.WriteLine();
-                Console.WriteLine(" Tfs2Gource help:");
-                Console.WriteLine();
-                options.WriteOptionDescriptions(Console.Out);
-                return;
-            }
 
 			FileInfo logFile;
 			bool success = GenerateLogFile(gourceOptions, out logFile);
@@ -48,6 +56,16 @@ namespace Tfs2Gource
                 Console.WriteLine("Wrote out Gource log file to {0}", logFile.FullName);    
             }
 		}
+
+        private static void ShowHelp(OptionSet options, string errorMessage = "") {
+            Console.WriteLine();
+            if (errorMessage.HasValue()) {
+                Console.WriteLine(" Error: {0}", errorMessage);
+            }
+            Console.WriteLine(" Tfs2Gource help:");
+            Console.WriteLine();
+            options.WriteOptionDescriptions(Console.Out);
+        }
 
 		private static bool GenerateLogFile(Configuration.GourceOptions gourceOptions, out FileInfo logFile)
 		{
