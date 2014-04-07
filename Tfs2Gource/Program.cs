@@ -78,7 +78,7 @@ namespace Tfs2Gource
 
 		    using (var fileStream = new FileStream(logFile.FullName, FileMode.Create, FileAccess.ReadWrite))
 			{
-				DateTime to = DateTime.Now.Date.AddDays(1);
+				DateTime to = DateTime.Now.Date;
 				DateTime from = to.Subtract(gourceOptions.TimeSpan);
 			    Converter.Process(gourceOptions, from, fileStream);
 			}
